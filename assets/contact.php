@@ -1,46 +1,30 @@
 <?php
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Sanitize and retrieve form data
-    $name = strip_tags(trim($_POST["name"]));
-    $email = filter_var(trim($_POST["email"]), FILTER_SANITIZE_EMAIL);
-    $subject = trim($_POST["subject"]);
-    $message = trim($_POST["message"]);
+    // Get form data
+    $name = htmlspecialchars($_POST['name']);
+    $email = htmlspecialchars($_POST['email']);
+    $subject = htmlspecialchars($_POST['subject']);
+    $message = htmlspecialchars($_POST['message']);
 
-    // Validate form inputs
-    if (empty($name) || empty($subject) || empty($message) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        // Validation failed, send an error message
-        http_response_code(400);
-        echo "Please complete the form and provide a valid email address.";
-        exit;
-    }
+    // Validate email
+    if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        // Email settings
+        $to = "your-email@example.com"; // Replace with your email address
+        $headers = "From: " . $email . "\r\n" .
+                   "Reply-To: " . $email . "\r\n" .
+                   "X-Mailer: PHP/" . phpversion();
+        $fullMessage = "Name: " . $name . "\n" .
+                       "Email: " . $email . "\n" .
+                       "Message: \n" . $message;
 
-    // Set recipient email address (replace with your email)
-    $recipient = "zandapetela@gmail.com";
-
-    // Set the email subject
-    $email_subject = "New contact from $name: $subject";
-
-    // Build the email content
-    $email_content = "Name: $name\n";
-    $email_content .= "Email: $email\n\n";
-    $email_content .= "Message:\n$message\n";
-
-    // Build the email headers
-    $email_headers = "From: $name <$email>";
-
-    // Send the email
-    if (mail($recipient, $email_subject, $email_content, $email_headers)) {
-        // Success message
-        http_response_code(200);
-        echo "Thank you! Your message has been sent.";
+        // Send email
+        if (mail($to, $subject, $fullMessage, $headers)) {
+            echo "Message sent successfully!";
+        } else {
+            echo "Failed to send the message. Please try again later.";
+        }
     } else {
-        // Failure message
-        http_response_code(500);
-        echo "Oops! Something went wrong and we couldn't send your message.";
+        echo "Invalid email format!";
     }
-} else {
-    // Deny access if not POST request
-    http_response_code(403);
-    echo "There was a problem with your submission, please try again.";
 }
 ?>
